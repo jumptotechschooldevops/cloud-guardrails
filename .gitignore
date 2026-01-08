@@ -1,0 +1,28 @@
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+tfplan
+
+# Archives
+*.tar.gz
+*.zip
+
+# OS
+.DS_Store
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+tfplan
+
+# Archives
+*.zip
+*.tar.gz
+
+# OS
+.DS_Store
+
+

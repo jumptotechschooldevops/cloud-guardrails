@@ -1,0 +1,9 @@
+{
+  "Source": ["aws.config"],
+  "DetailType": ["Config Rules Compliance Change"],
+  "Detail": {
+    "newEvaluationResult": {
+      "complianceType": ["NON_COMPLIANT"]
+    }
+  }
+}

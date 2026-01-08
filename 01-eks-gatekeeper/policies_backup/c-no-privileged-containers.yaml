@@ -1,0 +1,6 @@
+apiVersion: constraints.gatekeeper.sh/v1alpha1
+kind: K8sPrivilegedContainer
+metadata:
+  name: deny-privileged
+spec:
+  enforcementAction: deny

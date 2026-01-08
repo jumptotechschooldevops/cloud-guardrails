@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: good
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: good
+  template:
+    metadata:
+      labels:
+        app: good
+    spec:
+      containers:
+      - name: web
+        image: nginx
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 1000        # REQUIRED — must be non-zero
+          allowPrivilegeEscalation: false
+        resources:
+          limits:
+            cpu: "250m"
+            memory: "256Mi"
+          requests:
+            cpu: "100m"
+            memory: "128Mi"
+

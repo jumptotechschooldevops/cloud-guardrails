@@ -1,0 +1,6 @@
+apiVersion: constraints.gatekeeper.sh/v1alpha1
+kind: K8sDisallowHostPath
+metadata:
+  name: disallow-hostpath
+spec:
+  enforcementAction: deny

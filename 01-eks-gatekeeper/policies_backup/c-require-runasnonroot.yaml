@@ -1,0 +1,6 @@
+apiVersion: constraints.gatekeeper.sh/v1alpha1
+kind: K8sRunAsNonRoot
+metadata:
+  name: require-runasnonroot
+spec:
+  enforcementAction: deny
