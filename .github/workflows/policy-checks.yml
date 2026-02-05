@@ -1,3 +1,4 @@
+#first run
 name: Policy Checks
 on: [pull_request]
 jobs:
