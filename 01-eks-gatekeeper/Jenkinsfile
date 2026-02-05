@@ -1,10 +1,5 @@
 pipeline {
-    agent {
-        docker {
-            image 'alpine:3.19'
-            args '-u root'
-        }
-    }
+    agent any
 
     options {
         timestamps()
@@ -17,26 +12,23 @@ pipeline {
 
     environment {
         CONFTEST_VERSION = '0.56.0'
+        CONFTEST_BIN = "${WORKSPACE}/conftest"
     }
 
     stages {
 
-        stage('Install Dependencies') {
+        stage('Install Conftest') {
             steps {
                 sh '''
-                apk add --no-cache \
-                  bash \
-                  curl \
-                  tar \
-                  ca-certificates
+                set -e
 
-                curl -L https://github.com/open-policy-agent/conftest/releases/download/v${CONFTEST_VERSION}/conftest_${CONFTEST_VERSION}_Linux_x86_64.tar.gz \
+                echo "Installing conftest for macOS..."
+
+                curl -L https://github.com/open-policy-agent/conftest/releases/download/v${CONFTEST_VERSION}/conftest_${CONFTEST_VERSION}_Darwin_x86_64.tar.gz \
                   | tar xz
 
                 chmod +x conftest
-                mv conftest /usr/local/bin/conftest
-
-                conftest --version
+                ./conftest --version
                 '''
             }
         }
@@ -45,10 +37,8 @@ pipeline {
             steps {
                 dir('01-eks-gatekeeper') {
                     sh '''
-                    echo "Running Conftest policy checks..."
-
-                    conftest test tests \
-                      --policy policies_backup
+                    echo "Running policy tests..."
+                    ${WORKSPACE}/conftest test tests --policy policies_backup
                     '''
                 }
             }
