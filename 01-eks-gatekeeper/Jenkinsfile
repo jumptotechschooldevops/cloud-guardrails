@@ -1,6 +1,16 @@
 pipeline {
     agent any
 
+    environment {
+        CONTEST_VERSION = "0.56.0"
+        PATH = "${env.WORKSPACE}:${env.PATH}"
+    }
+
+    options {
+        timestamps()
+        disableConcurrentBuilds()
+    }
+
     triggers {
         githubPush()
     }
@@ -13,37 +23,45 @@ pipeline {
             }
         }
 
-        stage('Install Terraform') {
-            steps {
-                sh '''
-                  if ! command -v terraform >/dev/null; then
-                    curl -fsSL https://releases.hashicorp.com/terraform/1.6.6/terraform_1.6.6_linux_amd64.zip -o terraform.zip
-                    unzip terraform.zip
-                    sudo mv terraform /usr/local/bin/
-                  fi
-                '''
-            }
-        }
-
         stage('Install Conftest') {
             steps {
                 sh '''
-                  curl -L https://github.com/open-policy-agent/conftest/releases/download/v0.56.0/conftest_0.56.0_Linux_x86_64.tar.gz | tar xz
-                  sudo mv conftest /usr/local/bin/
+                echo "Installing conftest locally (no sudo)..."
+
+                curl -L https://github.com/open-policy-agent/conftest/releases/download/v${CONTEST_VERSION}/conftest_${CONTEST_VERSION}_Linux_x86_64.tar.gz \
+                  | tar xz
+
+                chmod +x conftest
+                mv conftest $WORKSPACE/conftest
+
+                conftest --version
                 '''
             }
         }
 
-        stage('Terraform Plan + Conftest') {
+        stage('Run Policy Tests') {
             steps {
-                dir('02-conftest-terraform/terraform') {
+                dir('01-eks-gatekeeper') {
                     sh '''
-                      terraform init -input=false
-                      terraform plan -out=tfplan -input=false
-                      terraform show -json tfplan | conftest test --policy ../policies
+                    echo "Running conftest against Kubernetes manifests..."
+
+                    conftest test tests \
+                      --policy policies_backup
                     '''
                 }
             }
+        }
+    }
+
+    post {
+        success {
+            echo "✅ Policy checks passed"
+        }
+        failure {
+            echo "❌ Policy checks failed"
+        }
+        always {
+            cleanWs()
         }
     }
 }
