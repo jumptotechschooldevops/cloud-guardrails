@@ -1,9 +1,9 @@
 pipeline {
-    agent any
-
-    environment {
-        CONTEST_VERSION = "0.56.0"
-        PATH = "${env.WORKSPACE}:${env.PATH}"
+    agent {
+        docker {
+            image 'alpine:3.19'
+            args '-u root'
+        }
     }
 
     options {
@@ -15,35 +15,37 @@ pipeline {
         githubPush()
     }
 
+    environment {
+        CONFTEST_VERSION = '0.56.0'
+    }
+
     stages {
 
-        stage('Checkout') {
-            steps {
-                checkout scm
-            }
-        }
-
-        stage('Install Conftest') {
+        stage('Install Dependencies') {
             steps {
                 sh '''
-                echo "Installing conftest locally (no sudo)..."
+                apk add --no-cache \
+                  bash \
+                  curl \
+                  tar \
+                  ca-certificates
 
-                curl -L https://github.com/open-policy-agent/conftest/releases/download/v${CONTEST_VERSION}/conftest_${CONTEST_VERSION}_Linux_x86_64.tar.gz \
+                curl -L https://github.com/open-policy-agent/conftest/releases/download/v${CONFTEST_VERSION}/conftest_${CONFTEST_VERSION}_Linux_x86_64.tar.gz \
                   | tar xz
 
                 chmod +x conftest
-                mv conftest $WORKSPACE/conftest
+                mv conftest /usr/local/bin/conftest
 
                 conftest --version
                 '''
             }
         }
 
-        stage('Run Policy Tests') {
+        stage('Run Gatekeeper Policy Tests') {
             steps {
                 dir('01-eks-gatekeeper') {
                     sh '''
-                    echo "Running conftest against Kubernetes manifests..."
+                    echo "Running Conftest policy checks..."
 
                     conftest test tests \
                       --policy policies_backup
@@ -55,10 +57,10 @@ pipeline {
 
     post {
         success {
-            echo "✅ Policy checks passed"
+            echo "✅ Policy checks PASSED"
         }
         failure {
-            echo "❌ Policy checks failed"
+            echo "❌ Policy checks FAILED"
         }
         always {
             cleanWs()
