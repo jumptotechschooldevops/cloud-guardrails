@@ -12,7 +12,6 @@ pipeline {
 
     environment {
         CONFTEST_VERSION = '0.56.0'
-        CONFTEST_BIN = "${WORKSPACE}/conftest"
     }
 
     stages {
@@ -21,8 +20,6 @@ pipeline {
             steps {
                 sh '''
                 set -e
-
-                echo "Installing conftest for macOS..."
 
                 curl -L https://github.com/open-policy-agent/conftest/releases/download/v${CONFTEST_VERSION}/conftest_${CONFTEST_VERSION}_Darwin_x86_64.tar.gz \
                   | tar xz
@@ -33,12 +30,11 @@ pipeline {
             }
         }
 
-        stage('Run Gatekeeper Policy Tests') {
+        stage('Run Policy Tests') {
             steps {
                 dir('01-eks-gatekeeper') {
                     sh '''
-                    echo "Running policy tests..."
-                    ${WORKSPACE}/conftest test tests --policy policies_backup
+                    ../conftest test tests --policy policies
                     '''
                 }
             }
